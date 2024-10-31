@@ -36,7 +36,7 @@ class CircuitBreaker:
     def handle_request(self, func: Callable, *args, **kwargs) -> Any:
         with self.lock:
             if self.state == CircuitBreakerState.OPEN:
-                if datetime.datetime.now() - self.last_failure >= self.reset_timeout:
+                if (datetime.datetime.now() - self.last_failure).total_seconds() >= self.reset_timeout:
                     self.state = CircuitBreakerState.HALF_OPEN
                 else:
                     raise CircuitBreakerError("Circuit breaker is open")
@@ -52,10 +52,40 @@ class CircuitBreaker:
 
     def _handle_failure(self):
         self.failures += 1
-        self.last_failure_time = datetime.datetime.now()
+        self.last_failure = datetime.datetime.now()
         if self.failures >= self.failure_threshold:
             self.state = CircuitBreakerState.OPEN
         
 
-# def test_circuit_breaker():
-#     breaker = CircuitBreaker(failure_threshold=3, reset_timeout=5)
+def test_circuit_breaker():
+    breaker = CircuitBreaker(failure_threshold=3, reset_timeout=5)
+
+    def failing_func(should_fail: bool = False):
+        if should_fail:
+            raise Exception("Some dummy errors")
+        return "SUCCESS"
+    
+    try:
+        result = breaker.handle_request(failing_func, should_fail = False)
+        print(result)
+    except CircuitBreakerError as e:
+        print(f"Circuit breaker error: {e}")
+    
+    for i in range(4):
+        try:
+            result = breaker.handle_request(failing_func, should_fail = True)
+            print(f"Iteration {i + 1}: {result}")
+        except CircuitBreakerError as e:
+            print(f"Circuit breaker error: {e}")
+
+    import time
+    time.sleep(5)
+    try:
+        result = breaker.handle_request(failing_func, should_fail = False)
+        print(result)
+    except CircuitBreakerError as e:
+        print(f"Circuit breaker error: {e}")
+
+
+if __name__ == "__main__":
+    test_circuit_breaker()
