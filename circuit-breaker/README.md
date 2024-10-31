@@ -2,6 +2,7 @@ Circuit Breaker pattern is designed to prevent a cascading failure in a distribu
 
 The circuit breaker monitors the failure rate of a service. If the failure rate exceeds a threshold, the circuit breaker trips and stops sending requests to the service.
 
+![CircuitBreaker](./cb.drawio.png)
 
 ## States
 
