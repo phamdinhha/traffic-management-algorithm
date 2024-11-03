@@ -65,5 +65,5 @@ class SlidingWindowRateLimiter:
                 "reset_time": (request_log.timestamp[0] + self.window_size) if request_log.timestamp else now + self.window_size,
                 "window_size": self.window_size
             }
-    
+  
     
